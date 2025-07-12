@@ -67,95 +67,96 @@ private fun Route.webRoutes() {
 
 
 private fun Route.apiRoutes(){
-
-    // GET /api/v1/recipes - List all recipes
-    get {
-        val recipeService = call.application.dependencies.resolve<RecipeService>()
-        val recipes = recipeService.getAllRecipes()
-        call.respond(recipes)
-    }
-
-    // POST /api/v1/recipes - Create new recipe
-    post {
-        val recipeService = call.application.dependencies.resolve<RecipeService>()
-        val request = call.receive<CreateRecipeRequest>()
-
-        val recipe = Recipe(
-            id = "",
-            name = request.name,
-            description = request.description,
-            prepTimeMinutes = request.prepTimeMinutes,
-            cookTimeMinutes = request.cookTimeMinutes,
-            servings = request.servings,
-            difficulty = request.difficulty,
-            createdAt = "",
-            updatedAt = ""
-        )
-
-        val created = recipeService.createRecipe(recipe)
-        call.respond(HttpStatusCode.Created, created)
-    }
-
-    // GET /api/v1/recipes/{id} - Get recipe by ID
-    get("/{id}") {
-        val recipeService = call.application.dependencies.resolve<RecipeService>()
-        val id = call.parameters["id"] ?: return@get call.respond(
-            HttpStatusCode.BadRequest,
-            mapOf("error" to "Missing recipe ID")
-        )
-
-        val recipe = recipeService.getRecipeById(id)
-        if (recipe != null) {
-            call.respond(recipe)
-        } else {
-            call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+    route("/api/v1/recipes"){
+        // GET /api/v1/recipes - List all recipes
+        get {
+            val recipeService = call.application.dependencies.resolve<RecipeService>()
+            val recipes = recipeService.getAllRecipes()
+            call.respond(recipes)
         }
-    }
 
-    // PUT /api/v1/recipes/{id} - Update recipe
-    put("/{id}") {
-        val recipeService = call.application.dependencies.resolve<RecipeService>()
-        val id = call.parameters["id"] ?: return@put call.respond(
-            HttpStatusCode.BadRequest,
-            mapOf("error" to "Missing recipe ID")
-        )
+        // POST /api/v1/recipes - Create new recipe
+        post {
+            val recipeService = call.application.dependencies.resolve<RecipeService>()
+            val request = call.receive<CreateRecipeRequest>()
 
-        val request = call.receive<UpdateRecipeRequest>()
-        val existingRecipe = recipeService.getRecipeById(id) ?: return@put call.respond(
-            HttpStatusCode.NotFound,
-            mapOf("error" to "Recipe not found")
-        )
+            val recipe = Recipe(
+                id = "",
+                name = request.name,
+                description = request.description,
+                prepTimeMinutes = request.prepTimeMinutes,
+                cookTimeMinutes = request.cookTimeMinutes,
+                servings = request.servings,
+                difficulty = request.difficulty,
+                createdAt = "",
+                updatedAt = ""
+            )
 
-        val updatedRecipe = existingRecipe.copy(
-            name = request.name ?: existingRecipe.name,
-            description = request.description ?: existingRecipe.description,
-            prepTimeMinutes = request.prepTimeMinutes ?: existingRecipe.prepTimeMinutes,
-            cookTimeMinutes = request.cookTimeMinutes ?: existingRecipe.cookTimeMinutes,
-            servings = request.servings ?: existingRecipe.servings,
-            difficulty = request.difficulty ?: existingRecipe.difficulty
-        )
-
-        val result = recipeService.updateRecipe(updatedRecipe)
-        if (result != null) {
-            call.respond(result)
-        } else {
-            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update recipe"))
+            val created = recipeService.createRecipe(recipe)
+            call.respond(HttpStatusCode.Created, created)
         }
-    }
 
-    // DELETE /api/v1/recipes/{id} - Delete recipe
-    delete("/{id}") {
-        val recipeService = call.application.dependencies.resolve<RecipeService>()
-        val id = call.parameters["id"] ?: return@delete call.respond(
-            HttpStatusCode.BadRequest,
-            mapOf("error" to "Missing recipe ID")
-        )
+        // GET /api/v1/recipes/{id} - Get recipe by ID
+        get("/{id}") {
+            val recipeService = call.application.dependencies.resolve<RecipeService>()
+            val id = call.parameters["id"] ?: return@get call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Missing recipe ID")
+            )
 
-        val deleted = recipeService.deleteRecipe(id)
-        if (deleted) {
-            call.respond(HttpStatusCode.NoContent)
-        } else {
-            call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+            val recipe = recipeService.getRecipeById(id)
+            if (recipe != null) {
+                call.respond(recipe)
+            } else {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+            }
+        }
+
+        // PUT /api/v1/recipes/{id} - Update recipe
+        put("/{id}") {
+            val recipeService = call.application.dependencies.resolve<RecipeService>()
+            val id = call.parameters["id"] ?: return@put call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Missing recipe ID")
+            )
+
+            val request = call.receive<UpdateRecipeRequest>()
+            val existingRecipe = recipeService.getRecipeById(id) ?: return@put call.respond(
+                HttpStatusCode.NotFound,
+                mapOf("error" to "Recipe not found")
+            )
+
+            val updatedRecipe = existingRecipe.copy(
+                name = request.name ?: existingRecipe.name,
+                description = request.description ?: existingRecipe.description,
+                prepTimeMinutes = request.prepTimeMinutes ?: existingRecipe.prepTimeMinutes,
+                cookTimeMinutes = request.cookTimeMinutes ?: existingRecipe.cookTimeMinutes,
+                servings = request.servings ?: existingRecipe.servings,
+                difficulty = request.difficulty ?: existingRecipe.difficulty
+            )
+
+            val result = recipeService.updateRecipe(updatedRecipe)
+            if (result != null) {
+                call.respond(result)
+            } else {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update recipe"))
+            }
+        }
+
+        // DELETE /api/v1/recipes/{id} - Delete recipe
+        delete("/{id}") {
+            val recipeService = call.application.dependencies.resolve<RecipeService>()
+            val id = call.parameters["id"] ?: return@delete call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Missing recipe ID")
+            )
+
+            val deleted = recipeService.deleteRecipe(id)
+            if (deleted) {
+                call.respond(HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+            }
         }
     }
 }
