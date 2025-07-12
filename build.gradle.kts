@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.hikari)
     implementation(libs.logback)
+    implementation(libs.kotlinx.datetime)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
