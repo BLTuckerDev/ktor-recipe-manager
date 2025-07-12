@@ -13,7 +13,8 @@ import io.ktor.server.html.*
 import kotlinx.html.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
-import com.recipemanager.plugins.*
+import io.ktor.server.request.uri
+import kotlinx.datetime.Clock
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -70,7 +71,7 @@ fun Application.configureRouting() {
                             }
                             div("bg-blue-50 p-4 rounded") {
                                 p("text-blue-800") {
-                                    +"Built with Ktor ${io.ktor.server.application.ApplicationEnvironment::class.java.`package`.implementationVersion ?: "3.2.0"} and Kotlin"
+                                    +"Built with Ktor and Kotlin"
                                 }
                             }
                         }
@@ -80,7 +81,7 @@ fun Application.configureRouting() {
         }
         
         get("/health") {
-            call.respond(mapOf("status" to "OK", "timestamp" to System.currentTimeMillis()))
+            call.respond(mapOf("status" to "OK", "timestamp" to Clock.System.now().toString()))
         }
         
         route("/api/v1") {
