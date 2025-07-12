@@ -16,7 +16,6 @@ A modern recipe management application built with Ktor 3.2.0, showcasing the new
 - **Framework**: Ktor 3.2.0
 - **Database**: PostgreSQL + Exposed ORM
 - **Frontend**: Ktor HTML DSL + Tailwind CSS
-- **Deployment**: GCP Cloud Run + Cloud Build
 
 ## API Endpoints
 
