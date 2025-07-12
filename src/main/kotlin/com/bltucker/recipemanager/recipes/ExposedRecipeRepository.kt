@@ -3,12 +3,12 @@ package com.bltucker.recipemanager.recipes
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeRepository
 import com.bltucker.recipemanager.database.tables.Recipes
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
 class ExposedRecipeRepository : RecipeRepository {
@@ -46,7 +46,7 @@ class ExposedRecipeRepository : RecipeRepository {
             .singleOrNull()
     }
 
-    override suspend fun create(recipe: Recipe): Recipe = newSuspendedTransaction {
+    override suspend fun create(recipe: Recipe): String = newSuspendedTransaction {
         val id = Recipes.insertAndGetId {
             it[name] = recipe.name
             it[description] = recipe.description
@@ -56,7 +56,7 @@ class ExposedRecipeRepository : RecipeRepository {
             it[difficulty] = recipe.difficulty
         }
 
-        findById(id.toString())!!
+        id.toString()
     }
 
     override suspend fun update(recipe: Recipe): Recipe? = newSuspendedTransaction {

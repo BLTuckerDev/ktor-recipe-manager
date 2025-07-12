@@ -5,6 +5,7 @@ import com.bltucker.recipemanager.common.models.RecipeRepository
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 class RecipeService(private val repository: RecipeRepository) {
     suspend fun getAllRecipes(): List<Recipe> {
@@ -17,13 +18,17 @@ class RecipeService(private val repository: RecipeRepository) {
 
     @OptIn(ExperimentalTime::class)
     suspend fun createRecipe(recipe: Recipe): Recipe {
+        val now = Clock.System.now().toString()
         val recipeWithMetadata = recipe.copy(
             id = UUID.randomUUID().toString(),
-            createdAt = Clock.System.now().toString(),
-            updatedAt = Clock.System.now().toString()
+            createdAt = now,
+            updatedAt = now,
         )
 
-        return repository.create(recipeWithMetadata)
+        val insertedId = repository.create(recipeWithMetadata)
+
+        return repository.findById(insertedId)
+            ?: throw IllegalStateException("Failed to retrieve created recipe")
     }
 
     @OptIn(ExperimentalTime::class)

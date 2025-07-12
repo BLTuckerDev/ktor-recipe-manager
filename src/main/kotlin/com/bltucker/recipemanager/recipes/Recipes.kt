@@ -77,23 +77,35 @@ private fun Route.apiRoutes(){
 
         // POST /api/v1/recipes - Create new recipe
         post {
-            val recipeService = call.application.dependencies.resolve<RecipeService>()
-            val request = call.receive<CreateRecipeRequest>()
+            try {
+                val recipeService = call.application.dependencies.resolve<RecipeService>()
+                val request = call.receive<CreateRecipeRequest>()
 
-            val recipe = Recipe(
-                id = "",
-                name = request.name,
-                description = request.description,
-                prepTimeMinutes = request.prepTimeMinutes,
-                cookTimeMinutes = request.cookTimeMinutes,
-                servings = request.servings,
-                difficulty = request.difficulty,
-                createdAt = "",
-                updatedAt = ""
-            )
+                println("Received request: $request")
 
-            val created = recipeService.createRecipe(recipe)
-            call.respond(HttpStatusCode.Created, created)
+                // Convert DTO -> Domain Model
+                val recipe = Recipe(
+                    id = "", // Service will set this
+                    name = request.name,
+                    description = request.description,
+                    prepTimeMinutes = request.prepTimeMinutes,
+                    cookTimeMinutes = request.cookTimeMinutes,
+                    servings = request.servings,
+                    difficulty = request.difficulty,
+                    createdAt = "", // Service will set this
+                    updatedAt = ""  // Service will set this
+                )
+
+                println("Creating recipe: $recipe")
+                val created = recipeService.createRecipe(recipe)
+                println("Created recipe: $created")
+
+                call.respond(HttpStatusCode.Created, created)
+            } catch (e: Exception) {
+                println("Error creating recipe: ${e.message}")
+                e.printStackTrace()
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            }
         }
 
         // GET /api/v1/recipes/{id} - Get recipe by ID
