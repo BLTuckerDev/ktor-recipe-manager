@@ -1,5 +1,6 @@
 package com.bltucker.recipemanager
 
+import com.bltucker.recipemanager.database.configureDatabase
 import com.bltucker.recipemanager.plugins.configureHTTP
 import com.bltucker.recipemanager.plugins.configureMonitoring
 import com.bltucker.recipemanager.plugins.configureSerialization
@@ -9,9 +10,8 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.html.*
-import kotlinx.html.*
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -22,6 +22,7 @@ fun Application.module() {
     configureSerialization()
     configureMonitoring()
     configureHTTP()
+    configureDatabase()
     configureSystemRoutes()
 
     recipesModule()
@@ -31,6 +32,7 @@ fun Application.module() {
 
 
 
+@OptIn(ExperimentalTime::class)
 fun Application.configureSystemRoutes() {
     routing {
 
