@@ -59,7 +59,7 @@ class ExposedRecipeRepository : RecipeRepository {
         id.toString()
     }
 
-    override suspend fun update(recipe: Recipe): Recipe? = newSuspendedTransaction {
+    override suspend fun update(recipe: Recipe): Int = newSuspendedTransaction {
         val updated = Recipes.update({ Recipes.id eq UUID.fromString(recipe.id) }) {
             recipe.name.let { name -> it[Recipes.name] = name }
             recipe.description?.let { description -> it[Recipes.description] = description }
@@ -69,7 +69,7 @@ class ExposedRecipeRepository : RecipeRepository {
             recipe.difficulty?.let { difficulty -> it[Recipes.difficulty] = difficulty }
         }
 
-        if (updated > 0) findById(id) else null
+        updated
     }
 
     override suspend fun delete(id: String): Boolean = newSuspendedTransaction {

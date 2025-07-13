@@ -37,7 +37,13 @@ class RecipeService(private val repository: RecipeRepository) {
             updatedAt = Clock.System.now().toString()
         )
 
-        return repository.update(updatedRecipe)
+        val updatedCount = repository.update(updatedRecipe)
+
+        return if (updatedCount > 0) {
+            repository.findById(recipe.id)
+        } else {
+            null
+        }
     }
 
     suspend fun deleteRecipe(id: String): Boolean {
