@@ -27,7 +27,7 @@ import kotlinx.html.title
 fun Application.recipesModule() {
     dependencies {
         provide<RecipeRepository> { ExposedRecipeRepository() }
-        provide<RecipeService> { RecipeService(resolve()) }
+        provide(RecipeService::class)
     }
 
     routing{

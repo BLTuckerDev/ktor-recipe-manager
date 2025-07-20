@@ -4,7 +4,6 @@ import com.bltucker.recipemanager.database.configureDatabase
 import com.bltucker.recipemanager.plugins.configureHTTP
 import com.bltucker.recipemanager.plugins.configureMonitoring
 import com.bltucker.recipemanager.plugins.configureSerialization
-import com.bltucker.recipemanager.recipes.recipesModule
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -14,14 +13,13 @@ import kotlin.time.ExperimentalTime
 
 fun main(args: Array<String>) = io.ktor.server.netty.EngineMain.main(args)
 
-suspend fun Application.module() {
+suspend fun Application.appModule() {
     configureSerialization()
     configureMonitoring()
     configureHTTP()
     configureDatabase()
     configureSystemRoutes()
 
-    recipesModule()
 }
 
 @OptIn(ExperimentalTime::class)

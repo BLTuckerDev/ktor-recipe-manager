@@ -7,13 +7,17 @@ import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.annotations.Property
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.resolve
+import io.ktor.server.plugins.di.provide
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 suspend fun Application.configureDatabase() {
+    dependencies{
+        provide(::provideDataSource)
+    }
 
-    val dataSource = dependencies.resolve<HikariDataSource>()
+    val dataSource: HikariDataSource by dependencies
 
     Database.connect(dataSource)
 
@@ -35,6 +39,7 @@ data class DatasourceConfig(
     val jdbcUrl = "jdbc:postgresql://$host:$port/$name?sslmode=$sslMode"
 }
 
+//provided via application.conf
 fun provideDataSourceConfig(
     @Property("database.host") host: String,
     @Property("database.port") port: String,
