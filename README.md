@@ -1,6 +1,9 @@
 # Recipe Manager
 
 A modern recipe management application built with Ktor 3.2.0, showcasing the new modular architecture and dependency injection features.
+Built as a companion to [this blog post](https://blog.bltucker.com/getting-injected-ktors-new-dependency-framework/)
+
+Expanded on whenever I feel like playing around with ktor
 
 ## Quick Start
 
