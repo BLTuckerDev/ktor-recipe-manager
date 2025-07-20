@@ -1,12 +1,11 @@
-package com.bltucker.recipemanager.database
+package com.bltucker.recipemanager.common.database
 
-import com.bltucker.recipemanager.database.tables.Recipes
+import com.bltucker.recipemanager.common.database.tables.Recipes
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
 import io.ktor.server.plugins.di.annotations.Property
 import io.ktor.server.plugins.di.dependencies
-import io.ktor.server.plugins.di.resolve
 import io.ktor.server.plugins.di.provide
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils

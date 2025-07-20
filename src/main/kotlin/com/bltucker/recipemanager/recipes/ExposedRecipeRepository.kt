@@ -2,7 +2,7 @@ package com.bltucker.recipemanager.recipes
 
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeRepository
-import com.bltucker.recipemanager.database.tables.Recipes
+import com.bltucker.recipemanager.common.database.tables.Recipes
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
