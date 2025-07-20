@@ -1,7 +1,7 @@
 package com.bltucker.recipemanager.recipes
 
 import com.bltucker.recipemanager.common.models.Recipe
-import com.bltucker.recipemanager.common.models.RecipeRepository
+import com.bltucker.recipemanager.common.repositories.RecipeRepository
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime

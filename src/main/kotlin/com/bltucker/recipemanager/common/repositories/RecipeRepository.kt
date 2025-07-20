@@ -1,4 +1,6 @@
-package com.bltucker.recipemanager.common.models
+package com.bltucker.recipemanager.common.repositories
+
+import com.bltucker.recipemanager.common.models.Recipe
 
 interface RecipeRepository {
     suspend fun findAll(): List<Recipe>
@@ -7,3 +9,5 @@ interface RecipeRepository {
     suspend fun update(recipe: Recipe): Int
     suspend fun delete(id: String): Boolean
 }
+
+
