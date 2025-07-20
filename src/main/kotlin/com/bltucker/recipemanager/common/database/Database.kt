@@ -1,6 +1,5 @@
 package com.bltucker.recipemanager.common.database
 
-import com.bltucker.recipemanager.common.database.tables.Recipes
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.Application
@@ -9,7 +8,6 @@ import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.provide
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 suspend fun Application.configureDatabase() {
     dependencies{
@@ -20,9 +18,6 @@ suspend fun Application.configureDatabase() {
 
     Database.connect(dataSource)
 
-    transaction {
-        SchemaUtils.create(Recipes)
-    }
 }
 
 
