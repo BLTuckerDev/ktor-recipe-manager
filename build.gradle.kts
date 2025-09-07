@@ -25,17 +25,9 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.logback)
 
-    implementation(libs.flyway.core)
+    implementation(libs.flyway.postgresql)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.h2)
-}
-
-
-tasks.register<JavaExec>("generateMigrationScript") {
-    group = "application"
-    description = "Generate migration script in the path exposed-migration/migrations"
-    classpath = sourceSets.main.get().runtimeClasspath
-    mainClass = "com.bltucker.recipemanager.common.database.GenerateMigrationScriptKt"
 }

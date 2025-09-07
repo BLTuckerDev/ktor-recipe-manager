@@ -7,7 +7,6 @@ import io.ktor.server.plugins.di.annotations.Property
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.plugins.di.provide
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 
 suspend fun Application.configureDatabase() {
     dependencies{
@@ -16,8 +15,24 @@ suspend fun Application.configureDatabase() {
 
     val dataSource: HikariDataSource by dependencies
 
-    Database.connect(dataSource)
+    migrate(dataSource)
 
+    Database.connect(dataSource)
+}
+
+fun migrate(dataSource: HikariDataSource) {
+    val flyway = org.flywaydb.core.Flyway.configure()
+        .dataSource(dataSource)
+        .baselineOnMigrate(true)
+        .load()
+
+    try {
+        flyway.migrate()
+    } catch (e: Exception) {
+        // Handle migration failures
+        println("Flyway migration failed: ${e.message}")
+        throw e
+    }
 }
 
 
@@ -32,6 +47,7 @@ data class DatasourceConfig(
 ){
     val jdbcUrl = "jdbc:postgresql://$host:$port/$name?sslmode=$sslMode"
 }
+
 
 //provided via application.conf
 fun provideDataSourceConfig(
