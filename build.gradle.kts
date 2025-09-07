@@ -25,6 +25,8 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.logback)
 
+    implementation(libs.flyway.core)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.h2)
