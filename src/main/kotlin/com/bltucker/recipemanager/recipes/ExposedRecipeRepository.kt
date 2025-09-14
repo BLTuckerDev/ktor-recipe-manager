@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -55,6 +56,7 @@ class ExposedRecipeRepository : RecipeRepository {
                 recipe.cookTimeMinutes?.let { cookTime -> it[cookTimeMinutes] = cookTime }
                 recipe.servings?.let { servings -> it[Recipes.servings] = servings }
                 recipe.difficulty?.let { difficulty -> it[Recipes.difficulty] = difficulty }
+                recipe.updatedAt?.let { _ -> it[Recipes.updatedAt] = CurrentDateTime }
             }
 
             updated

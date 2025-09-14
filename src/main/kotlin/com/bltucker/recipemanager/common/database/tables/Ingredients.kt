@@ -9,7 +9,6 @@ object Ingredients : UUIDTable("ingredients") {
     val category = varchar("category", 100).nullable()
     val defaultUnit = varchar("default_unit", 50).nullable()
     val description = text("description").nullable()
-    val nutritionPer100g = text("nutrition_per_100g").nullable()
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
 }

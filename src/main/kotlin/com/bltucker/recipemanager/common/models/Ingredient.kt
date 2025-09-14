@@ -9,7 +9,6 @@ data class Ingredient(
     val category: String? = null,
     val defaultUnit: String? = null,
     val description: String? = null,
-    val nutritionPer100g: String? = null,
     val createdAt: String,
     val updatedAt: String
 )
