@@ -1,6 +1,7 @@
 package com.bltucker.recipemanager.common.testing
 
 import com.bltucker.recipemanager.common.models.Ingredient
+import com.bltucker.recipemanager.common.models.Recipe
 
 object TestDataFactory {
     
@@ -41,5 +42,55 @@ object TestDataFactory {
         category = "Spice",
         description = "Table salt",
         defaultUnit = "gram"
+    )
+
+    // Recipe factory methods
+    fun createRecipe(
+        id: String = "",
+        name: String = "Test Recipe",
+        description: String? = "Test recipe description",
+        prepTimeMinutes: Int? = 15,
+        cookTimeMinutes: Int? = 30,
+        servings: Int? = 4,
+        difficulty: String? = "Easy",
+        createdAt: String = "",
+        updatedAt: String = ""
+    ) = Recipe(
+        id = id,
+        name = name,
+        description = description,
+        prepTimeMinutes = prepTimeMinutes,
+        cookTimeMinutes = cookTimeMinutes,
+        servings = servings,
+        difficulty = difficulty,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    fun createPastaRecipe() = createRecipe(
+        name = "Spaghetti Bolognese",
+        description = "Classic Italian pasta dish with meat sauce",
+        prepTimeMinutes = 20,
+        cookTimeMinutes = 45,
+        servings = 6,
+        difficulty = "Medium"
+    )
+
+    fun createSaladRecipe() = createRecipe(
+        name = "Caesar Salad",
+        description = "Fresh romaine lettuce with Caesar dressing",
+        prepTimeMinutes = 10,
+        cookTimeMinutes = null,
+        servings = 4,
+        difficulty = "Easy"
+    )
+
+    fun createDessertRecipe() = createRecipe(
+        name = "Chocolate Cake",
+        description = "Rich chocolate layer cake",
+        prepTimeMinutes = 30,
+        cookTimeMinutes = 35,
+        servings = 8,
+        difficulty = "Hard"
     )
 }
