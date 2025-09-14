@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.innerJoin
@@ -35,7 +34,17 @@ class ExposedIngredientRepository : IngredientRepository {
     ): List<Ingredient> {
         return withContext(Dispatchers.IO) {
             transaction {
-                Ingredients.selectAll().map(ResultRow::toIngredient)
+                var results = Ingredients.selectAll().map(ResultRow::toIngredient)
+                
+                category?.let { cat ->
+                    results = results.filter { it.category == cat }
+                }
+                
+                searchTerm?.let { term ->
+                    results = results.filter { it.name.lowercase().contains(term.lowercase()) }
+                }
+                
+                results
             }
         }
     }
@@ -125,6 +134,7 @@ private fun ResultRow.toIngredient() = Ingredient(
     id = this[Ingredients.id].toString(),
     name = this[Ingredients.name],
     category = this[Ingredients.category],
+    defaultUnit = this[Ingredients.defaultUnit],
     description = this[Ingredients.description],
     createdAt = this[Ingredients.createdAt].toString(),
     updatedAt = this[Ingredients.updatedAt].toString(),
