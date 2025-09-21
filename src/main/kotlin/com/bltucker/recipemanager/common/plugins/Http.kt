@@ -1,4 +1,4 @@
-package com.bltucker.recipemanager.plugins
+package com.bltucker.recipemanager.common.plugins
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application

@@ -1,4 +1,4 @@
-package com.bltucker.recipemanager.database.tables
+package com.bltucker.recipemanager.common.database.tables
 
 import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime

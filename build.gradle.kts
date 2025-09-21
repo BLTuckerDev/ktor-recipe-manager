@@ -25,7 +25,23 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.logback)
 
+    implementation(libs.flyway.postgresql)
+
+    // Testing dependencies
+    testImplementation(libs.bundles.testing)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.h2)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}
+
+tasks.test {
+    useJUnitPlatform()
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
 }

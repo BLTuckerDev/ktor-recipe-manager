@@ -2,10 +2,15 @@
 kotlin = "2.2.0"
 ktor = "3.2.1"
 exposed = "1.0.0-beta-4"
+flyway = "11.12.0"
 postgresql = "42.7.3"
 hikari = "5.0.1"
 logback = "1.4.14"
 h2 = "2.2.224"
+junit = "5.10.1"
+coroutines-test = "1.8.0"
+mockk = "1.13.8"
+assertj = "3.24.2"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
@@ -26,12 +31,22 @@ exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exp
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
 exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
 
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+
+# Testing libraries
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines-test" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 
 [bundles]
 ktor-server = [
@@ -45,7 +60,7 @@ ktor-server = [
     "ktor-server-auth-jwt",
     "ktor-server-status-pages",
     "ktor-server-cors",
-    "ktor-server-call-logging"
+    "ktor-server-call-logging",
 ]
 
 exposed = [
@@ -53,6 +68,13 @@ exposed = [
     "exposed-dao", 
     "exposed-jdbc",
     "exposed-kotlin-datetime"
+]
+
+testing = [
+    "junit-jupiter",
+    "kotlinx-coroutines-test",
+    "mockk",
+    "assertj-core"
 ]
 
 [plugins]
