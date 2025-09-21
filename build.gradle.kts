@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.logback)
 
     implementation(libs.flyway.postgresql)
+    implementation(libs.bcrypt)
 
     // Testing dependencies
     testImplementation(libs.bundles.testing)

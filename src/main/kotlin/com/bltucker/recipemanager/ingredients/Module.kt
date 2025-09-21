@@ -4,6 +4,8 @@ import com.bltucker.recipemanager.common.models.Ingredient
 import com.bltucker.recipemanager.common.repositories.IngredientRepository
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -28,15 +30,20 @@ fun Application.ingredientsModule(){
 }
 
 private fun Route.ingredientRoutes(){
-    route("/api/v1/ingredients"){
+    authenticate("auth-jwt") {
+        route("/api/v1/ingredients"){
 
-        get {
-            val ingredientService = call.application.dependencies.resolve<IngredientService>()
-            val ingredients = ingredientService.getAllIngredients()
-            call.respond(ingredients)
-        }
+            get {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal!!.payload.getClaim("userId").asString()
+                val ingredientService = call.application.dependencies.resolve<IngredientService>()
+                val ingredients = ingredientService.getAllIngredientsForUser(userId)
+                call.respond(ingredients)
+            }
 
         post {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal!!.payload.getClaim("userId").asString()
             val ingredientService = call.application.dependencies.resolve<IngredientService>()
             val request = call.receive<CreateIngredientRequest>()
 
@@ -50,18 +57,20 @@ private fun Route.ingredientRoutes(){
                 updatedAt = ""  // Service will set this
             )
 
-            val created = ingredientService.createIngredient(ingredient)
+            val created = ingredientService.createIngredientForUser(ingredient, userId)
             call.respond(HttpStatusCode.Created, created)
         }
 
         get("/{id}") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal!!.payload.getClaim("userId").asString()
             val ingredientService = call.application.dependencies.resolve<IngredientService>()
             val id = call.parameters["id"] ?: return@get call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing ingredient ID")
             )
 
-            val ingredient = ingredientService.getIngredientById(id)
+            val ingredient = ingredientService.getIngredientByIdForUser(id, userId)
             if (ingredient != null) {
                 call.respond(ingredient)
             } else {
@@ -113,5 +122,6 @@ private fun Route.ingredientRoutes(){
         }
 
 
+        }
     }
 }

@@ -3,8 +3,11 @@ package com.bltucker.recipemanager.recipes
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeIngredient
 import com.bltucker.recipemanager.common.repositories.RecipeRepository
+import com.bltucker.recipemanager.common.plugins.UserSession
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.html.respondHtml
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.receive
@@ -39,24 +42,27 @@ fun Application.recipesModule() {
 }
 
 private fun Route.webRoutes() {
-    get("/") {
-        call.respondHtml {
-            head {
-                title("Recipe Manager")
-                script(src = "https://cdn.tailwindcss.com") {}
-            }
-            body("bg-gray-100 min-h-screen") {
-                div("container mx-auto px-4 py-8") {
-                    div("bg-white rounded-lg shadow-md p-6") {
-                        h1("text-3xl font-bold text-gray-800 mb-4") {
-                            +"🍳 Recipe Manager"
-                        }
-                        p("text-gray-600 mb-4") {
-                            +"Welcome to your personal recipe management system!"
-                        }
-                        div("bg-blue-50 p-4 rounded") {
-                            p("text-blue-800") {
-                                +"Built with Ktor and Kotlin"
+    authenticate("auth-session") {
+        get("/") {
+            val session = call.principal<UserSession>()!!
+            call.respondHtml {
+                head {
+                    title("Recipe Manager")
+                    script(src = "https://cdn.tailwindcss.com") {}
+                }
+                body("bg-gray-100 min-h-screen") {
+                    div("container mx-auto px-4 py-8") {
+                        div("bg-white rounded-lg shadow-md p-6") {
+                            h1("text-3xl font-bold text-gray-800 mb-4") {
+                                +"🍳 Recipe Manager"
+                            }
+                            p("text-gray-600 mb-4") {
+                                +"Welcome back, ${session.email}!"
+                            }
+                            div("bg-blue-50 p-4 rounded") {
+                                p("text-blue-800") {
+                                    +"Built with Ktor and Kotlin"
+                                }
                             }
                         }
                     }
@@ -68,24 +74,29 @@ private fun Route.webRoutes() {
 
 
 private fun Route.apiRoutes(){
-    route("/api/v1/recipes"){
-        // GET /api/v1/recipes - List all recipes
-        get {
-            val recipeService = call.application.dependencies.resolve<RecipeService>()
-            val recipes = recipeService.getAllRecipes()
-            call.respond(recipes)
-        }
+    authenticate("auth-jwt") {
+        route("/api/v1/recipes"){
+            // GET /api/v1/recipes - List all recipes
+            get {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal!!.payload.getClaim("userId").asString()
+                val recipeService = call.application.dependencies.resolve<RecipeService>()
+                val recipes = recipeService.getAllRecipesForUser(userId)
+                call.respond(recipes)
+            }
 
         // POST /api/v1/recipes - Create new recipe
         post {
             try {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal!!.payload.getClaim("userId").asString()
                 val recipeService = call.application.dependencies.resolve<RecipeService>()
                 val request: CreateRecipeRequest = call.receive<CreateRecipeRequest>()
 
                 println("Received request: $request")
 
 
-                val created = recipeService.createRecipe(request)
+                val created = recipeService.createRecipeForUser(request, userId)
                 println("Created recipe: $created")
 
                 call.respond(HttpStatusCode.Created, created)
@@ -98,13 +109,15 @@ private fun Route.apiRoutes(){
 
         // GET /api/v1/recipes/{id} - Get recipe by ID
         get("/{id}") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal!!.payload.getClaim("userId").asString()
             val recipeService = call.application.dependencies.resolve<RecipeService>()
             val id = call.parameters["id"] ?: return@get call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing recipe ID")
             )
 
-            val recipe = recipeService.getRecipeById(id)
+            val recipe = recipeService.getRecipeByIdForUser(id, userId)
             if (recipe != null) {
                 call.respond(recipe)
             } else {
@@ -218,5 +231,6 @@ private fun Route.apiRoutes(){
                 call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe ingredient not found"))
             }
         }
+    }
     }
 }

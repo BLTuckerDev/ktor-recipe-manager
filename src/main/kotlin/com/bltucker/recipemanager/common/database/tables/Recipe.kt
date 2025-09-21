@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.datetime.datetime
 
 
 object Recipes : UUIDTable("recipes") {
+    val userId = reference("user_id", Users.id)
     val name = varchar("name", 255)
     val description = text("description").nullable()
     val prepTimeMinutes = integer("prep_time_minutes").nullable()
