@@ -12,7 +12,11 @@ data class UserSession(val userId: String, val email: String) : Principal
 
 fun Application.configureSecurity() {
     val sessionSignKey = environment.config.property("jwt.secret").getString().toByteArray()
-
+    val secret = environment.config.property("jwt.secret").getString()
+    val issuer = environment.config.property("jwt.issuer").getString()
+    val audience = environment.config.property("jwt.audience").getString()
+    val environmentRealm = environment.config.property("jwt.realm").getString()
+    
     install(Sessions) {
         cookie<UserSession>("user_session") {
             cookie.path = "/"
@@ -22,10 +26,8 @@ fun Application.configureSecurity() {
 
     install(Authentication) {
         jwt("auth-jwt") {
-            val secret = environment.config.property("jwt.secret").getString()
-            val issuer = environment.config.property("jwt.issuer").getString()
-            val audience = environment.config.property("jwt.audience").getString()
-            realm = environment.config.property("jwt.realm").getString()
+
+            realm = environmentRealm
 
             verifier(
                 JWT.require(Algorithm.HMAC256(secret))
