@@ -23,7 +23,7 @@ fun Application.ingredientsModule(){
     }
 
     routing{
-
+        ingredientRoutes()
     }
 }
 

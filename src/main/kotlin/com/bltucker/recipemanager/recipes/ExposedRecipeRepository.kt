@@ -1,13 +1,18 @@
 package com.bltucker.recipemanager.recipes
 
 
+import com.bltucker.recipemanager.common.database.tables.Ingredients
+import com.bltucker.recipemanager.common.database.tables.RecipeIngredients
 import com.bltucker.recipemanager.common.database.tables.Recipes
+import com.bltucker.recipemanager.common.models.Ingredient
 import com.bltucker.recipemanager.common.models.Recipe
+import com.bltucker.recipemanager.common.models.RecipeIngredient
 import com.bltucker.recipemanager.common.repositories.RecipeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -69,6 +74,36 @@ class ExposedRecipeRepository : RecipeRepository {
             Recipes.deleteWhere { Recipes.id eq UUID.fromString(id) } > 0
         }
     }
+
+    override suspend fun findIngredientsByRecipeId(recipeId: String): List<RecipeIngredient> = withContext(Dispatchers.IO) {
+        transaction {
+            RecipeIngredients
+                .innerJoin(Ingredients, { ingredientId }, { Ingredients.id })
+                .selectAll()
+                .where { RecipeIngredients.recipeId eq UUID.fromString(recipeId) }
+                .map(ResultRow::toRecipeIngredient)
+        }
+    }
+
+    override suspend fun addIngredientToRecipe(recipeIngredient: RecipeIngredient): RecipeIngredient = withContext(Dispatchers.IO) {
+        transaction {
+            val id = RecipeIngredients.insertAndGetId {
+                it[recipeId] = UUID.fromString(recipeIngredient.recipeId)
+                it[ingredientId] = UUID.fromString(recipeIngredient.ingredientId)
+                it[quantity] = recipeIngredient.quantity?.toBigDecimalOrNull() ?: 0.toBigDecimal()
+                it[unit] = recipeIngredient.unit
+                it[notes] = recipeIngredient.notes
+            }
+            // Return the original object with the new ID
+            recipeIngredient.copy(id = id.toString())
+        }
+    }
+
+    override suspend fun removeIngredientFromRecipe(recipeIngredientId: String): Boolean = withContext(Dispatchers.IO) {
+        transaction {
+            RecipeIngredients.deleteWhere { RecipeIngredients.id eq UUID.fromString(recipeIngredientId) } > 0
+        }
+    }
 }
 
 private fun ResultRow.toRecipe() = Recipe(
@@ -83,3 +118,22 @@ private fun ResultRow.toRecipe() = Recipe(
     updatedAt = this[Recipes.updatedAt].toString()
 )
 
+
+private fun ResultRow.toRecipeIngredient() = RecipeIngredient(
+    id = this[RecipeIngredients.id].toString(),
+    recipeId = this[RecipeIngredients.recipeId].toString(),
+    ingredientId = this[RecipeIngredients.ingredientId].toString(),
+    quantity = this[RecipeIngredients.quantity].toString(),
+    unit = this[RecipeIngredients.unit],
+    notes = this[RecipeIngredients.notes],
+    createdAt = this[RecipeIngredients.createdAt].toString(),
+    ingredient = Ingredient(
+        id = this[Ingredients.id].toString(),
+        name = this[Ingredients.name],
+        category = this[Ingredients.category],
+        defaultUnit = this[Ingredients.defaultUnit],
+        description = this[Ingredients.description],
+        createdAt = this[Ingredients.createdAt].toString(),
+        updatedAt = this[Ingredients.updatedAt].toString()
+    )
+)
