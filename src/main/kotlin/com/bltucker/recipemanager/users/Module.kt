@@ -14,14 +14,18 @@ import io.ktor.server.sessions.*
 import kotlinx.html.*
 
 fun Application.usersModule() {
+    val environmentSecret = environment.config.property("jwt.secret").getString()
+    val environmentIssuer = environment.config.property("jwt.issuer").getString()
+    val environmentAudience = environment.config.property("jwt.audience").getString()
+
     dependencies {
         provide<UserRepository> { ExposedUserRepository() }
         provide<PasswordService> { PasswordService() }
         provide<TokenService> {
             TokenService(
-                secret = environment.config.property("jwt.secret").getString(),
-                issuer = environment.config.property("jwt.issuer").getString(),
-                audience = environment.config.property("jwt.audience").getString()
+                secret = environmentSecret,
+                issuer = environmentIssuer,
+                audience = environmentAudience,
             )
         }
         provide(UserService::class)

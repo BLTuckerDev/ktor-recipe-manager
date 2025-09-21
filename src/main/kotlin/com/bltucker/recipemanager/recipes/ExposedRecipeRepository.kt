@@ -8,10 +8,13 @@ import com.bltucker.recipemanager.common.models.Ingredient
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeIngredient
 import com.bltucker.recipemanager.common.repositories.RecipeRepository
+import com.bltucker.recipemanager.common.plugins.userId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -23,23 +26,32 @@ import java.util.UUID
 
 class ExposedRecipeRepository : RecipeRepository {
     override suspend fun findAll(): List<Recipe> = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         transaction {
-            Recipes.selectAll().map(ResultRow::toRecipe)
+            Recipes.selectAll()
+                .where { Recipes.userId eq UUID.fromString(userId) }
+                .map(ResultRow::toRecipe)
         }
     }
 
     override suspend fun findById(id: String): Recipe? = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         transaction {
-            Recipes.selectAll().where { Recipes.id eq UUID.fromString(id) }
+            Recipes.selectAll().where {
+                (Recipes.id eq UUID.fromString(id)) and
+                (Recipes.userId eq UUID.fromString(userId))
+            }
                 .map(ResultRow::toRecipe)
                 .singleOrNull()
         }
     }
 
     override suspend fun create(recipe: Recipe): String = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         transaction {
             val id = Recipes.insertAndGetId {
                 it[name] = recipe.name
+                it[Recipes.userId] = UUID.fromString(userId)
                 it[description] = recipe.description
                 it[prepTimeMinutes] = recipe.prepTimeMinutes
                 it[cookTimeMinutes] = recipe.cookTimeMinutes
@@ -52,9 +64,13 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun update(recipe: Recipe): Int = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         transaction {
-            
-            val updated = Recipes.update({ Recipes.id eq UUID.fromString(recipe.id) }) {
+
+            val updated = Recipes.update({
+                (Recipes.id eq UUID.fromString(recipe.id)) and
+                (Recipes.userId eq UUID.fromString(userId))
+            }) {
                 recipe.name.let { name -> it[Recipes.name] = name }
                 recipe.description?.let { description -> it[Recipes.description] = description }
                 recipe.prepTimeMinutes?.let { prepTime -> it[prepTimeMinutes] = prepTime }
@@ -70,17 +86,26 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun delete(id: String): Boolean = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         transaction {
-            Recipes.deleteWhere { Recipes.id eq UUID.fromString(id) } > 0
+            Recipes.deleteWhere {
+                (Recipes.id eq UUID.fromString(id)) and
+                (Recipes.userId eq UUID.fromString(userId))
+            } > 0
         }
     }
 
     override suspend fun findIngredientsByRecipeId(recipeId: String): List<RecipeIngredient> = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         transaction {
             RecipeIngredients
                 .innerJoin(Ingredients, { ingredientId }, { Ingredients.id })
+                .innerJoin(Recipes, { RecipeIngredients.recipeId }, { Recipes.id })
                 .selectAll()
-                .where { RecipeIngredients.recipeId eq UUID.fromString(recipeId) }
+                .where {
+                    (RecipeIngredients.recipeId eq UUID.fromString(recipeId)) and
+                    (Recipes.userId eq UUID.fromString(userId))
+                }
                 .map(ResultRow::toRecipeIngredient)
         }
     }

@@ -1,11 +1,11 @@
 package com.bltucker.recipemanager.users
 
 import com.bltucker.recipemanager.common.database.tables.Users
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.core.select
-import org.jetbrains.exposed.v1.core.insert
-import org.jetbrains.exposed.v1.core.update
-import java.util.*
+import org.jetbrains.exposed.v1.jdbc.update
+import java.util.UUID
 
 interface UserRepository {
     suspend fun createUser(email: String, hashedPassword: String): User
@@ -37,7 +37,8 @@ class ExposedUserRepository : UserRepository {
     }
 
     override suspend fun findByEmail(email: String): User? = transaction {
-        Users.select { Users.email eq email }
+        Users.selectAll()
+            .where { Users.email eq email }
             .firstOrNull()
             ?.let { row ->
                 User(
@@ -52,7 +53,8 @@ class ExposedUserRepository : UserRepository {
     }
 
     override suspend fun findById(id: String): User? = transaction {
-        Users.select { Users.id eq UUID.fromString(id) }
+        Users.selectAll()
+            .where { Users.id eq UUID.fromString(id) }
             .firstOrNull()
             ?.let { row ->
                 User(
