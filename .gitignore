@@ -30,3 +30,4 @@ logs/
 Thumbs.db
 /.env.dev
 /ai/
+/notes_to_myself.txt
