@@ -7,7 +7,9 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UserSession(val userId: String, val email: String) : Principal
 
 fun Application.configureSecurity() {
