@@ -1,5 +1,6 @@
 package com.bltucker.recipemanager.ingredients
 
+import com.bltucker.recipemanager.common.UserContextProvider
 import com.bltucker.recipemanager.common.database.tables.Ingredients
 import com.bltucker.recipemanager.common.database.tables.Ingredients.category
 import com.bltucker.recipemanager.common.database.tables.Ingredients.defaultUnit
@@ -30,12 +31,14 @@ import java.util.Locale.getDefault
 import java.util.UUID
 import kotlin.time.Instant
 
-class ExposedIngredientRepository : IngredientRepository {
+class ExposedIngredientRepository(
+    private val userContextProvider: UserContextProvider,
+    ) : IngredientRepository {
     override suspend fun findAll(
         category: String?,
         searchTerm: String?
     ): List<Ingredient> {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         return withContext(Dispatchers.IO) {
             transaction {
                 var results = Ingredients.selectAll()
@@ -56,7 +59,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun findById(id: String): Ingredient? {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         return withContext(Dispatchers.IO) {
             transaction {
                 Ingredients.selectAll()
@@ -71,7 +74,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun searchByName(searchQuery: String): List<Ingredient> {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         return withContext(Dispatchers.IO) {
             transaction {
                 Ingredients.selectAll()
@@ -86,7 +89,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun create(ingredient: Ingredient): String {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         return withContext(Dispatchers.IO) {
             transaction {
                 val id = Ingredients.insertAndGetId {
@@ -102,7 +105,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun update(ingredient: Ingredient): Ingredient? = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         val updatedCount = transaction {
             Ingredients.update({
                 (Ingredients.id eq UUID.fromString(ingredient.id)) and
@@ -125,7 +128,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun delete(id: String): Boolean {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         return withContext(Dispatchers.IO) {
             transaction {
                 Ingredients.deleteWhere {
@@ -137,7 +140,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun findMostUsed(limit: Int): List<Ingredient> {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         return withContext(Dispatchers.IO) {
             transaction {
                 val usageCount = RecipeIngredients.ingredientId.count()

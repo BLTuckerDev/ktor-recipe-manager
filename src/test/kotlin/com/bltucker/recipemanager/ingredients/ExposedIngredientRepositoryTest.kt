@@ -1,7 +1,11 @@
 package com.bltucker.recipemanager.ingredients
 
+import com.bltucker.recipemanager.common.UserContextProvider
 import com.bltucker.recipemanager.common.testing.DatabaseTestBase
+import com.bltucker.recipemanager.common.testing.TestConstants
 import com.bltucker.recipemanager.common.testing.TestDataFactory
+import io.mockk.coEvery
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -15,9 +19,13 @@ import kotlin.test.assertTrue
 class ExposedIngredientRepositoryTest : DatabaseTestBase() {
     
     private lateinit var repository: ExposedIngredientRepository
-    
+    private lateinit var mockUserContextProvider: UserContextProvider
     override fun afterDatabaseSetup() {
-        repository = ExposedIngredientRepository()
+        mockUserContextProvider = mockk()
+
+        coEvery { mockUserContextProvider.getUserId() } returns TestConstants.TEST_USER_ID.toString()
+
+        repository = ExposedIngredientRepository(mockUserContextProvider)
     }
     
     @Nested
