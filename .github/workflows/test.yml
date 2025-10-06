@@ -25,5 +25,21 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run tests with Gradle
+        # Continue on error so the next steps can publish test results
+        continue-on-error: true
         run: ./gradlew test
 
+      - name: Publish Test Results
+        uses: actions/upload-artifact@v4
+        if: always() # This ensures that results are uploaded even if tests fail
+        with:
+          name: test-results
+          path: build/test-results/test/
+
+      - name: Publish Test Summary
+        uses: dorny/test-reporter@v1
+        if: always() # Run this step even if the tests fail
+        with:
+          name: JUnit Test Report
+          path: "build/test-results/test/*.xml"
+          reporter: java-junit
