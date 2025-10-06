@@ -89,14 +89,9 @@ private fun Route.webRoutes() {
 
         val authResult = userService.authenticateUser(email, password)
         authResult.fold(
-            onSuccess = { token ->
-                val user = userService.getUserById(token.split(".")[1]) // This is simplified; you'd decode the JWT properly
-                if (user != null) {
-                    call.sessions.set(UserSession(userId = user.id, email = user.email))
-                    call.respondRedirect("/")
-                } else {
-                    call.respond(HttpStatusCode.InternalServerError, "Failed to retrieve user")
-                }
+            onSuccess = { (token, user) ->
+                call.sessions.set(UserSession(userId = user.id, email = user.email))
+                call.respondRedirect("/")
             },
             onFailure = { error ->
                 call.respond(HttpStatusCode.Unauthorized, error.message ?: "Authentication failed")
@@ -199,9 +194,7 @@ private fun Route.apiRoutes() {
 
             val authResult = userService.authenticateUser(request.email, request.password)
             authResult.fold(
-                onSuccess = { token ->
-                    val user = userService.getUserById(request.email) // This should be fixed to get user from token
-                    if (user != null) {
+                onSuccess = { (token, user) ->
                         val loginResponse = LoginResponse(
                             token = token,
                             user = UserResponse(
@@ -211,9 +204,6 @@ private fun Route.apiRoutes() {
                             )
                         )
                         call.respond(loginResponse)
-                    } else {
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to retrieve user"))
-                    }
                 },
                 onFailure = { error ->
                     call.respond(HttpStatusCode.Unauthorized, mapOf("error" to (error.message ?: "Authentication failed")))

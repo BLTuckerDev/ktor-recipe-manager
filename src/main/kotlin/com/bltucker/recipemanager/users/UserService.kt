@@ -21,18 +21,22 @@ class UserService(
         }
     }
 
-    suspend fun authenticateUser(email: String, password: String): Result<String> {
+    suspend fun authenticateUser(email: String, password: String): Result<Pair<String, User>> {
         return try {
             val user = userRepository.findByEmail(email)
             if (user != null && passwordService.verifyPassword(password, user.hashedPassword)) {
                 val token = tokenService.generateToken(user)
-                Result.success(token)
+                Result.success(token to user)
             } else {
                 Result.failure(Exception("Invalid email or password"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun getUserByEmail(email: String): User? {
+        return userRepository.findByEmail(email)
     }
 
     suspend fun getUserById(userId: String): User? {
