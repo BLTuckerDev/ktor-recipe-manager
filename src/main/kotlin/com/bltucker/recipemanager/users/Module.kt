@@ -184,7 +184,6 @@ private fun Route.apiRoutes() {
                         id = user.id,
                         email = user.email,
                         isVerified = user.isVerified,
-                        createdAt = user.createdAt
                     )
                     call.respond(HttpStatusCode.Created, userResponse)
                 },
@@ -209,7 +208,6 @@ private fun Route.apiRoutes() {
                                 id = user.id,
                                 email = user.email,
                                 isVerified = user.isVerified,
-                                createdAt = user.createdAt
                             )
                         )
                         call.respond(loginResponse)
@@ -235,7 +233,6 @@ private fun Route.apiRoutes() {
                         id = user.id,
                         email = user.email,
                         isVerified = user.isVerified,
-                        createdAt = user.createdAt
                     )
                     call.respond(userResponse)
                 } else {

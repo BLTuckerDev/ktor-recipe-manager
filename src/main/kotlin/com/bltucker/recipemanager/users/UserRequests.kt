@@ -25,5 +25,4 @@ data class UserResponse(
     val id: String,
     val email: String,
     val isVerified: Boolean,
-    val createdAt: String
 )
