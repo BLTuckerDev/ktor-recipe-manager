@@ -32,7 +32,7 @@ import kotlinx.html.title
 
 fun Application.recipesModule() {
     dependencies {
-        provide<RecipeRepository> { ExposedRecipeRepository() }
+        provide<RecipeRepository> { ExposedRecipeRepository(resolve()) }
         provide(RecipeService::class)
     }
 

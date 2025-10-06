@@ -22,7 +22,7 @@ import io.ktor.server.routing.routing
 
 fun Application.ingredientsModule(){
     dependencies{
-        provide<IngredientRepository> { ExposedIngredientRepository() }
+        provide<IngredientRepository> { ExposedIngredientRepository(resolve()) }
         provide(IngredientService::class)
     }
 

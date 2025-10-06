@@ -1,6 +1,7 @@
 package com.bltucker.recipemanager.recipes
 
 
+import com.bltucker.recipemanager.common.UserContextProvider
 import com.bltucker.recipemanager.common.database.tables.Ingredients
 import com.bltucker.recipemanager.common.database.tables.RecipeIngredients
 import com.bltucker.recipemanager.common.database.tables.Recipes
@@ -8,10 +9,8 @@ import com.bltucker.recipemanager.common.models.Ingredient
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeIngredient
 import com.bltucker.recipemanager.common.repositories.RecipeRepository
-import com.bltucker.recipemanager.common.plugins.userId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.coroutineContext
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
@@ -24,9 +23,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 
-class ExposedRecipeRepository : RecipeRepository {
+class ExposedRecipeRepository(private val userContextProvider: UserContextProvider) : RecipeRepository {
     override suspend fun findAll(): List<Recipe> = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         transaction {
             Recipes.selectAll()
                 .where { Recipes.userId eq UUID.fromString(userId) }
@@ -35,7 +34,7 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun findById(id: String): Recipe? = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         transaction {
             Recipes.selectAll().where {
                 (Recipes.id eq UUID.fromString(id)) and
@@ -47,7 +46,7 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun create(recipe: Recipe): String = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         transaction {
             val id = Recipes.insertAndGetId {
                 it[name] = recipe.name
@@ -64,7 +63,7 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun update(recipe: Recipe): Int = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         transaction {
 
             val updated = Recipes.update({
@@ -86,7 +85,7 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun delete(id: String): Boolean = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         transaction {
             Recipes.deleteWhere {
                 (Recipes.id eq UUID.fromString(id)) and
@@ -96,7 +95,7 @@ class ExposedRecipeRepository : RecipeRepository {
     }
 
     override suspend fun findIngredientsByRecipeId(recipeId: String): List<RecipeIngredient> = withContext(Dispatchers.IO) {
-        val userId = coroutineContext.userId
+        val userId = userContextProvider.getUserId()
         transaction {
             RecipeIngredients
                 .innerJoin(Ingredients, { ingredientId }, { Ingredients.id })
