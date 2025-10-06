@@ -3,8 +3,13 @@ package com.bltucker.recipemanager.recipes
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeIngredient
 import com.bltucker.recipemanager.common.repositories.RecipeRepository
+import com.bltucker.recipemanager.common.plugins.UserSession
+import com.bltucker.recipemanager.common.plugins.UserContext
+import kotlinx.coroutines.withContext
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.html.respondHtml
 import io.ktor.server.plugins.di.dependencies
 import io.ktor.server.request.receive
@@ -39,24 +44,27 @@ fun Application.recipesModule() {
 }
 
 private fun Route.webRoutes() {
-    get("/") {
-        call.respondHtml {
-            head {
-                title("Recipe Manager")
-                script(src = "https://cdn.tailwindcss.com") {}
-            }
-            body("bg-gray-100 min-h-screen") {
-                div("container mx-auto px-4 py-8") {
-                    div("bg-white rounded-lg shadow-md p-6") {
-                        h1("text-3xl font-bold text-gray-800 mb-4") {
-                            +"🍳 Recipe Manager"
-                        }
-                        p("text-gray-600 mb-4") {
-                            +"Welcome to your personal recipe management system!"
-                        }
-                        div("bg-blue-50 p-4 rounded") {
-                            p("text-blue-800") {
-                                +"Built with Ktor and Kotlin"
+    authenticate("auth-session") {
+        get("/") {
+            val session = call.principal<UserSession>()!!
+            call.respondHtml {
+                head {
+                    title("Recipe Manager")
+                    script(src = "https://cdn.tailwindcss.com") {}
+                }
+                body("bg-gray-100 min-h-screen") {
+                    div("container mx-auto px-4 py-8") {
+                        div("bg-white rounded-lg shadow-md p-6") {
+                            h1("text-3xl font-bold text-gray-800 mb-4") {
+                                +"🍳 Recipe Manager"
+                            }
+                            p("text-gray-600 mb-4") {
+                                +"Welcome back, ${session.email}!"
+                            }
+                            div("bg-blue-50 p-4 rounded") {
+                                p("text-blue-800") {
+                                    +"Built with Ktor and Kotlin"
+                                }
                             }
                         }
                     }
@@ -68,27 +76,36 @@ private fun Route.webRoutes() {
 
 
 private fun Route.apiRoutes(){
-    route("/api/v1/recipes"){
-        // GET /api/v1/recipes - List all recipes
-        get {
-            val recipeService = call.application.dependencies.resolve<RecipeService>()
-            val recipes = recipeService.getAllRecipes()
-            call.respond(recipes)
-        }
+    authenticate("auth-jwt") {
+        route("/api/v1/recipes"){
+            // GET /api/v1/recipes - List all recipes
+            get {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal!!.payload.getClaim("userId").asString()
+                val recipeService = call.application.dependencies.resolve<RecipeService>()
+
+                withContext(UserContext(userId)) {
+                    val recipes = recipeService.getAllRecipes()
+                    call.respond(recipes)
+                }
+            }
 
         // POST /api/v1/recipes - Create new recipe
         post {
             try {
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal!!.payload.getClaim("userId").asString()
                 val recipeService = call.application.dependencies.resolve<RecipeService>()
                 val request: CreateRecipeRequest = call.receive<CreateRecipeRequest>()
 
                 println("Received request: $request")
 
+                withContext(UserContext(userId)) {
+                    val created = recipeService.createRecipe(request)
+                    println("Created recipe: $created")
 
-                val created = recipeService.createRecipe(request)
-                println("Created recipe: $created")
-
-                call.respond(HttpStatusCode.Created, created)
+                    call.respond(HttpStatusCode.Created, created)
+                }
             } catch (e: Exception) {
                 println("Error creating recipe: ${e.message}")
                 e.printStackTrace()
@@ -98,67 +115,79 @@ private fun Route.apiRoutes(){
 
         // GET /api/v1/recipes/{id} - Get recipe by ID
         get("/{id}") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal!!.payload.getClaim("userId").asString()
             val recipeService = call.application.dependencies.resolve<RecipeService>()
             val id = call.parameters["id"] ?: return@get call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing recipe ID")
             )
 
-            val recipe = recipeService.getRecipeById(id)
-            if (recipe != null) {
-                call.respond(recipe)
-            } else {
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+            withContext(UserContext(userId)) {
+                val recipe = recipeService.getRecipeById(id)
+                if (recipe != null) {
+                    call.respond(recipe)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+                }
             }
         }
 
         // PUT /api/v1/recipes/{id} - Update recipe
         put("/{id}") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal!!.payload.getClaim("userId").asString()
             val recipeService = call.application.dependencies.resolve<RecipeService>()
             val id = call.parameters["id"] ?: return@put call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing recipe ID")
             )
 
-            val request = call.receive<UpdateRecipeRequest>()
-            val existingRecipeResponse = recipeService.getRecipeById(id) ?: return@put call.respond(
-                HttpStatusCode.NotFound,
-                mapOf("error" to "Recipe not found")
-            )
+            withContext(UserContext(userId)) {
+                val request = call.receive<UpdateRecipeRequest>()
+                val existingRecipeResponse = recipeService.getRecipeById(id) ?: return@withContext call.respond(
+                    HttpStatusCode.NotFound,
+                    mapOf("error" to "Recipe not found")
+                )
 
-            val updatedRecipe = Recipe(
-                id = existingRecipeResponse.id,
-                name = request.name ?: existingRecipeResponse.name,
-                description = request.description ?: existingRecipeResponse.description,
-                prepTimeMinutes = request.prepTimeMinutes ?: existingRecipeResponse.prepTimeMinutes,
-                cookTimeMinutes = request.cookTimeMinutes ?: existingRecipeResponse.cookTimeMinutes,
-                servings = request.servings ?: existingRecipeResponse.servings,
-                difficulty = request.difficulty ?: existingRecipeResponse.difficulty,
-                createdAt = existingRecipeResponse.createdAt,
-                updatedAt = existingRecipeResponse.updatedAt // The service will update this
-            )
+                val updatedRecipe = Recipe(
+                    id = existingRecipeResponse.id,
+                    name = request.name ?: existingRecipeResponse.name,
+                    description = request.description ?: existingRecipeResponse.description,
+                    prepTimeMinutes = request.prepTimeMinutes ?: existingRecipeResponse.prepTimeMinutes,
+                    cookTimeMinutes = request.cookTimeMinutes ?: existingRecipeResponse.cookTimeMinutes,
+                    servings = request.servings ?: existingRecipeResponse.servings,
+                    difficulty = request.difficulty ?: existingRecipeResponse.difficulty,
+                    createdAt = existingRecipeResponse.createdAt,
+                    updatedAt = existingRecipeResponse.updatedAt // The service will update this
+                )
 
-            val result = recipeService.updateRecipe(updatedRecipe)
-            if (result != null) {
-                call.respond(result)
-            } else {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update recipe"))
+                val result = recipeService.updateRecipe(updatedRecipe)
+                if (result != null) {
+                    call.respond(result)
+                } else {
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update recipe"))
+                }
             }
         }
 
         // DELETE /api/v1/recipes/{id} - Delete recipe
         delete("/{id}") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal!!.payload.getClaim("userId").asString()
             val recipeService = call.application.dependencies.resolve<RecipeService>()
             val id = call.parameters["id"] ?: return@delete call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing recipe ID")
             )
 
-            val deleted = recipeService.deleteRecipe(id)
-            if (deleted) {
-                call.respond(HttpStatusCode.NoContent)
-            } else {
-                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+            withContext(UserContext(userId)) {
+                val deleted = recipeService.deleteRecipe(id)
+                if (deleted) {
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe not found"))
+                }
             }
         }
     }
@@ -218,5 +247,6 @@ private fun Route.apiRoutes(){
                 call.respond(HttpStatusCode.NotFound, mapOf("error" to "Recipe ingredient not found"))
             }
         }
+    }
     }
 }

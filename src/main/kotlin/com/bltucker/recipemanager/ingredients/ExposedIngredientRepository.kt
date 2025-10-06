@@ -8,12 +8,15 @@ import com.bltucker.recipemanager.common.database.tables.Ingredients.name
 import com.bltucker.recipemanager.common.database.tables.RecipeIngredients
 import com.bltucker.recipemanager.common.models.Ingredient
 import com.bltucker.recipemanager.common.repositories.IngredientRepository
+import com.bltucker.recipemanager.common.plugins.userId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.coroutineContext
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -32,28 +35,35 @@ class ExposedIngredientRepository : IngredientRepository {
         category: String?,
         searchTerm: String?
     ): List<Ingredient> {
+        val userId = coroutineContext.userId
         return withContext(Dispatchers.IO) {
             transaction {
-                var results = Ingredients.selectAll().map(ResultRow::toIngredient)
-                
+                var results = Ingredients.selectAll()
+                    .where { Ingredients.userId eq UUID.fromString(userId) }
+                    .map(ResultRow::toIngredient)
+
                 category?.let { cat ->
                     results = results.filter { it.category == cat }
                 }
-                
+
                 searchTerm?.let { term ->
                     results = results.filter { it.name.lowercase().contains(term.lowercase()) }
                 }
-                
+
                 results
             }
         }
     }
 
     override suspend fun findById(id: String): Ingredient? {
+        val userId = coroutineContext.userId
         return withContext(Dispatchers.IO) {
             transaction {
                 Ingredients.selectAll()
-                    .where { Ingredients.id eq UUID.fromString(id) }
+                    .where {
+                        (Ingredients.id eq UUID.fromString(id)) and
+                        (Ingredients.userId eq UUID.fromString(userId))
+                    }
                     .map(ResultRow::toIngredient)
                     .singleOrNull()
             }
@@ -61,10 +71,14 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun searchByName(searchQuery: String): List<Ingredient> {
+        val userId = coroutineContext.userId
         return withContext(Dispatchers.IO) {
             transaction {
                 Ingredients.selectAll()
-                    .where { Ingredients.name.lowerCase() like "%${searchQuery.lowercase(getDefault())}%" }
+                    .where {
+                        (Ingredients.name.lowerCase() like "%${searchQuery.lowercase(getDefault())}%") and
+                        (Ingredients.userId eq UUID.fromString(userId))
+                    }
                     .map(ResultRow::toIngredient)
 
             }
@@ -72,6 +86,7 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun create(ingredient: Ingredient): String {
+        val userId = coroutineContext.userId
         return withContext(Dispatchers.IO) {
             transaction {
                 val id = Ingredients.insertAndGetId {
@@ -79,6 +94,7 @@ class ExposedIngredientRepository : IngredientRepository {
                     it[category] = ingredient.category
                     it[description] = ingredient.description
                     it[defaultUnit] = ingredient.defaultUnit
+                    it[Ingredients.userId] = UUID.fromString(userId)
                 }
                 id.toString()
             }
@@ -86,8 +102,12 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun update(ingredient: Ingredient): Ingredient? = withContext(Dispatchers.IO) {
+        val userId = coroutineContext.userId
         val updatedCount = transaction {
-            Ingredients.update({ Ingredients.id eq UUID.fromString(ingredient.id) }) {
+            Ingredients.update({
+                (Ingredients.id eq UUID.fromString(ingredient.id)) and
+                (Ingredients.userId eq UUID.fromString(userId))
+            }) {
                 it[name] = ingredient.name
                 ingredient.category?.let { category -> it[Ingredients.category] = category }
                 ingredient.description?.let { description -> it[Ingredients.description] = description }
@@ -105,14 +125,19 @@ class ExposedIngredientRepository : IngredientRepository {
     }
 
     override suspend fun delete(id: String): Boolean {
+        val userId = coroutineContext.userId
         return withContext(Dispatchers.IO) {
             transaction {
-                Ingredients.deleteWhere { Ingredients.id eq UUID.fromString(id) } > 0
+                Ingredients.deleteWhere {
+                    (Ingredients.id eq UUID.fromString(id)) and
+                    (Ingredients.userId eq UUID.fromString(userId))
+                } > 0
             }
         }
     }
 
     override suspend fun findMostUsed(limit: Int): List<Ingredient> {
+        val userId = coroutineContext.userId
         return withContext(Dispatchers.IO) {
             transaction {
                 val usageCount = RecipeIngredients.ingredientId.count()
@@ -120,6 +145,7 @@ class ExposedIngredientRepository : IngredientRepository {
                 Ingredients
                     .innerJoin(RecipeIngredients)
                     .selectAll()
+                    .where { Ingredients.userId eq UUID.fromString(userId) }
                     .groupBy(Ingredients.id)
                     .orderBy(usageCount, SortOrder.DESC)
                     .limit(limit)

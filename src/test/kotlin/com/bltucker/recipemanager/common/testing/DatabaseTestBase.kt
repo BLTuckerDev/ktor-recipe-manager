@@ -3,6 +3,7 @@ package com.bltucker.recipemanager.common.testing
 import com.bltucker.recipemanager.common.database.tables.Ingredients
 import com.bltucker.recipemanager.common.database.tables.RecipeIngredients
 import com.bltucker.recipemanager.common.database.tables.Recipes
+import com.bltucker.recipemanager.common.database.tables.Users
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -21,7 +22,7 @@ abstract class DatabaseTestBase {
         )
         
         transaction(database) {
-            SchemaUtils.create(Recipes, Ingredients, RecipeIngredients)
+            SchemaUtils.create(Users, Recipes, Ingredients, RecipeIngredients)
         }
         
         afterDatabaseSetup()
@@ -30,7 +31,7 @@ abstract class DatabaseTestBase {
     @AfterEach
     fun teardownDatabase() {
         transaction(database) {
-            SchemaUtils.drop(RecipeIngredients, Ingredients, Recipes)
+            SchemaUtils.drop(RecipeIngredients, Ingredients, Recipes, Users)
         }
     }
     

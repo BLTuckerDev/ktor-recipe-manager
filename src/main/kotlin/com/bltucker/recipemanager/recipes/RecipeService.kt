@@ -1,6 +1,5 @@
 package com.bltucker.recipemanager.recipes
 
-import com.bltucker.recipemanager.common.models.Ingredient
 import com.bltucker.recipemanager.common.models.Recipe
 import com.bltucker.recipemanager.common.models.RecipeIngredient
 import com.bltucker.recipemanager.common.repositories.RecipeRepository

@@ -3,6 +3,7 @@ package com.bltucker.recipemanager
 import com.bltucker.recipemanager.common.database.configureDatabase
 import com.bltucker.recipemanager.common.plugins.configureHTTP
 import com.bltucker.recipemanager.common.plugins.configureMonitoring
+import com.bltucker.recipemanager.common.plugins.configureSecurity
 import com.bltucker.recipemanager.common.plugins.configureSerialization
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
@@ -18,6 +19,7 @@ suspend fun Application.appModule() {
     configureMonitoring()
     configureHTTP()
     configureDatabase()
+    configureSecurity()
     configureSystemRoutes()
 
 }

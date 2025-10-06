@@ -5,6 +5,7 @@ import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.datetime.datetime
 
 object Ingredients : UUIDTable("ingredients") {
+    val userId = reference("user_id", Users.id)
     val name = varchar("name", 255).uniqueIndex()
     val category = varchar("category", 100).nullable()
     val defaultUnit = varchar("default_unit", 50).nullable()
