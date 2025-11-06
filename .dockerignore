@@ -1,0 +1,41 @@
+# Git files
+.git
+.gitignore
+.github
+
+# IDE files
+.idea
+*.iml
+.vscode
+*.swp
+*.swo
+*~
+
+# Build output (will be built inside container)
+build/
+.gradle/
+out/
+
+# Environment files (never include in Docker image)
+.env
+.env.*
+*.env
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Test files
+src/test/
+
+# Scripts that aren't needed in container
+scripts/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
