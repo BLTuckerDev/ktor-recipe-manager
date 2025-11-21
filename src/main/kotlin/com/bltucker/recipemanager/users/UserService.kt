@@ -15,6 +15,9 @@ class UserService(
             } else {
                 val hashedPassword = passwordService.hashPassword(password)
                 val user = userRepository.createUser(email, hashedPassword)
+
+                // TODO: Send verification email
+
                 Result.success(user)
             }
         } catch (e: Exception) {
@@ -22,12 +25,23 @@ class UserService(
         }
     }
 
-    suspend fun authenticateUser(email: String, password: String): Result<Pair<String, User>> {
+    suspend fun authenticateUser(email: String, password: String): Result<Pair<String, String?>> {
         return try {
             val user = userRepository.findByEmail(email)
             if (user != null && passwordService.verifyPassword(password, user.hashedPassword)) {
-                val token = tokenService.generateToken(user)
-                Result.success(token to user)
+                val accessToken = tokenService.generateToken(user)
+                var refreshToken: String? = null
+
+                if (user.isVerified) {
+                    val rawRefreshToken = tokenService.generateRefreshToken()
+                    val hashedRefreshToken = passwordService.hashPassword(rawRefreshToken)
+                    // Refresh token expires in 30 days
+                    val expiresAt = java.time.Instant.now().plus(30, java.time.temporal.ChronoUnit.DAYS)
+                    refreshTokenRepository.save(java.util.UUID.fromString(user.id), hashedRefreshToken, expiresAt)
+                    refreshToken = rawRefreshToken
+                }
+
+                Result.success(accessToken to refreshToken)
             } else {
                 Result.failure(Exception("Invalid email or password"))
             }
