@@ -1,5 +1,9 @@
 package com.bltucker.recipemanager.users
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlin.time.Duration.Companion.days
+
 class UserService(
     private val userRepository: UserRepository,
     private val passwordService: PasswordService,
@@ -25,7 +29,7 @@ class UserService(
         }
     }
 
-    suspend fun authenticateUser(email: String, password: String): Result<Pair<String, String?>> {
+    suspend fun authenticateUser(email: String, password: String): Result<Pair<User, Pair<String, String?>>> {
         return try {
             val user = userRepository.findByEmail(email)
             if (user != null && passwordService.verifyPassword(password, user.hashedPassword)) {
@@ -36,12 +40,12 @@ class UserService(
                     val rawRefreshToken = tokenService.generateRefreshToken()
                     val hashedRefreshToken = passwordService.hashPassword(rawRefreshToken)
                     // Refresh token expires in 30 days
-                    val expiresAt = java.time.Instant.now().plus(30, java.time.temporal.ChronoUnit.DAYS)
+                    val expiresAt = Clock.System.now().plus(30.days)
                     refreshTokenRepository.save(java.util.UUID.fromString(user.id), hashedRefreshToken, expiresAt)
                     refreshToken = rawRefreshToken
                 }
 
-                Result.success(accessToken to refreshToken)
+                Result.success(user to (accessToken to refreshToken))
             } else {
                 Result.failure(Exception("Invalid email or password"))
             }
@@ -84,12 +88,9 @@ class UserService(
             
             val hashedToken = hashToken(refreshToken)
             val tokenRecord = refreshTokenRepository.findByTokenHash(hashedToken)
+                ?: return Result.failure(Exception("Invalid refresh token"))
 
-            if (tokenRecord == null) {
-                return Result.failure(Exception("Invalid refresh token"))
-            }
-
-            if (tokenRecord.expiresAt.isBefore(java.time.Instant.now())) {
+            if (tokenRecord.expiresAt > Clock.System.now()) {
                 refreshTokenRepository.deleteByTokenHash(hashedToken)
                 return Result.failure(Exception("Refresh token expired"))
             }
@@ -103,7 +104,7 @@ class UserService(
             val newAccessToken = tokenService.generateToken(user)
             val newRawRefreshToken = tokenService.generateRefreshToken()
             val newHashedRefreshToken = hashToken(newRawRefreshToken)
-            val expiresAt = java.time.Instant.now().plus(30, java.time.temporal.ChronoUnit.DAYS)
+            val expiresAt = Clock.System.now().plus(30.days)
             
             refreshTokenRepository.save(user.id.let { java.util.UUID.fromString(it) }, newHashedRefreshToken, expiresAt)
 

@@ -16,6 +16,7 @@ import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -76,7 +77,7 @@ class ExposedRecipeRepository(private val userContextProvider: UserContextProvid
                 recipe.cookTimeMinutes?.let { cookTime -> it[cookTimeMinutes] = cookTime }
                 recipe.servings?.let { servings -> it[Recipes.servings] = servings }
                 recipe.difficulty?.let { difficulty -> it[Recipes.difficulty] = difficulty }
-                recipe.updatedAt?.let { _ -> it[Recipes.updatedAt] = CurrentDateTime }
+                recipe.updatedAt?.let { _ -> it[Recipes.updatedAt] = CurrentTimestamp }
             }
 
             updated

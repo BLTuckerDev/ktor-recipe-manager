@@ -40,8 +40,9 @@ internal fun Route.apiRoutes() {
 
             val authResult = userService.authenticateUser(request.email, request.password)
             authResult.fold(
-                onSuccess = { (token, refreshToken) ->
-                    val user = userService.getUserByEmail(request.email)!!
+
+                onSuccess = { (user, tokenPair) ->
+                    val (token, refreshToken) = tokenPair
                     val loginResponse = LoginResponse(
                         token = token,
                         refreshToken = refreshToken,
