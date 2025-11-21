@@ -81,7 +81,8 @@ internal fun Route.webRoutes() {
 
         val authResult = userService.authenticateUser(email, password)
         authResult.fold(
-            onSuccess = { (token, user) ->
+            onSuccess = { (user, tokenPair) ->
+                val (accessToken, refreshToken) = tokenPair
                 call.sessions.set(UserSession(userId = user.id, email = user.email))
                 call.respondRedirect("/")
             },

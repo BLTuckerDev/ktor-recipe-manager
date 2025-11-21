@@ -17,7 +17,13 @@ data class LoginRequest(
 @Serializable
 data class LoginResponse(
     val token: String,
+    val refreshToken: String? = null,
     val user: UserResponse
+)
+
+@Serializable
+data class RefreshTokenRequest(
+    val refreshToken: String
 )
 
 @Serializable

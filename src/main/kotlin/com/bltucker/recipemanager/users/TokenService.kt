@@ -19,4 +19,17 @@ class TokenService(
             .withExpiresAt(Date(System.currentTimeMillis() + 3_600_000))
             .sign(Algorithm.HMAC256(secret))
     }
+
+    fun generateRefreshToken(): String {
+        return SecureTokenGenerator.generateToken()
+    }
+
+    private object SecureTokenGenerator {
+        fun generateToken(): String{
+            val bytes = ByteArray(32){ 0 }
+            val secureRandom = java.security.SecureRandom()
+            secureRandom.nextBytes(bytes)
+            return java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+        }
+    }
 }

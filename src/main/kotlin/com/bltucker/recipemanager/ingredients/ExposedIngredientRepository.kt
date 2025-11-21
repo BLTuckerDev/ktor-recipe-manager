@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
+import org.jetbrains.exposed.v1.datetime.CurrentTimestamp
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -115,7 +116,7 @@ class ExposedIngredientRepository(
                 ingredient.category?.let { category -> it[Ingredients.category] = category }
                 ingredient.description?.let { description -> it[Ingredients.description] = description }
                 ingredient.defaultUnit?.let { defaultUnit -> it[Ingredients.defaultUnit] = defaultUnit }
-                it[updatedAt] = CurrentDateTime
+                it[updatedAt] = CurrentTimestamp
             }
         }
 
