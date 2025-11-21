@@ -92,6 +92,11 @@ internal fun Route.webRoutes() {
         )
     }
 
+    post("/logout") {
+        call.sessions.clear<UserSession>() // Trashes the cookie
+        call.respondRedirect("/login")     // Sends browser to login page
+    }
+
     get("/register") {
         call.respondHtml {
             head {
