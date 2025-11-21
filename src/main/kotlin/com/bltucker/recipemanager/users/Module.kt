@@ -28,6 +28,7 @@ fun Application.usersModule() {
                 audience = environmentAudience,
             )
         }
+        provide<RefreshTokenRepository> { ExposedRefreshTokenRepository() }
         provide(UserService::class)
     }
 

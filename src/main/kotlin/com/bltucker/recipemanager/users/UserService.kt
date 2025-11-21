@@ -3,7 +3,8 @@ package com.bltucker.recipemanager.users
 class UserService(
     private val userRepository: UserRepository,
     private val passwordService: PasswordService,
-    private val tokenService: TokenService
+    private val tokenService: TokenService,
+    private val refreshTokenRepository: RefreshTokenRepository
 ) {
 
     suspend fun registerUser(email: String, password: String): Result<User> {
